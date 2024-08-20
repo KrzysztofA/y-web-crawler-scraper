@@ -8,13 +8,11 @@ from WebCrawlerScraper import PhrasesMode, Link
 
 
 class InfoItem(Item):
-    css_select_info = "div"
-    info = TextField(css_select=css_select_info, many=True)
+    info = TextField(css_select="div", many=True)
 
 
 class UrlsItem(Item):
-    css_select_urls = "a"
-    urls = AttrField(css_select=css_select_urls, attr="href", many=True)
+    urls = AttrField(css_select="a", attr="href", many=True)
 
 
 class WebScraperAsync:
@@ -26,7 +24,7 @@ class WebScraperAsync:
         self.searched_phrases = ["*"]
         self.max_link_size = -1
         self.max_depth = -1
-        self.element_types = ['p']
+        self.element_types = ['div']
         self.link_types = ['a']
         self.results_name = "results.txt"
         self.save_links = True
@@ -133,7 +131,7 @@ class WebScraperAsync:
                 return True
         return False
 
-    async def check_results_for_phrases(self, res):
+    def check_results_for_phrases(self, res):
         if self.phrases_mode == PhrasesMode.AND:
             result = True
             for i in self.searched_phrases:
@@ -148,5 +146,3 @@ class WebScraperAsync:
     def build_css_select(self):
         self.__css_select_info = ", ".join(self.element_types) if self.element_types[0] != "*" else "*"
         self.__css_select_urls = ", ".join(self.link_types) if self.link_types[0] != "*" else "*"
-        InfoItem.css_select_info = self.__css_select_info
-        UrlsItem.css_select_urls = self.__css_select_urls
