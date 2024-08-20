@@ -3,3 +3,5 @@ links.txt
 results.txt
 links2.txt
 main.py
+/.idea
+/WebCrawlerScraper/__pycache__

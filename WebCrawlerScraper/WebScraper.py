@@ -1,27 +1,14 @@
-from enum import Enum
+from .ScraperUtils import Link, PhrasesMode
 from queue import Queue
 
 import requests
 from bs4 import BeautifulSoup
 
 
-class PhrasesMode(Enum):
-    AND = 1,
-    OR = 2
-
-
-class Link:
-    def __init__(self, link="", base="", depth=0):
-        self.link = link
-        self.base = base
-        self.depth = depth
-
-    def get(self):
-        return [self.link, self.base, self.depth]
-
-
 class WebScraper:
     def __init__(self):
+        self.max_links_number = 0
+        self.__current_links_number = 0
         self.set = set()
         self.excluded_links_phrases = ["login"]
         self.accepted_content_type = ["text/html"]
@@ -51,6 +38,11 @@ class WebScraper:
                     print(f"Link {link} incompatible content type")
                     continue
 
+                if self.max_links_number > 0:
+                    if self.__current_links_number > self.max_links_number:
+                        return
+                    self.__current_links_number += 1
+
                 site = requests.get(link).text
                 if self.save_links:
                     with open(self.links_name, "a+") as f:
@@ -73,7 +65,7 @@ class WebScraper:
                         if self.check_for_phrases(i):
                             with open(self.results_name, "a+") as f:
                                 f.write(f"From {link}:\n")
-                                f.write(i)
+                                f.write(f"{i}\n")
                 links = [i.attrs['href'] for i in soup.find_all('a')]
 
                 for i in links:
@@ -87,7 +79,8 @@ class WebScraper:
                         print(f"Getting URL {i}")
                         self.set.add(i.strip("/"))
                         self.queue.put_nowait(Link(f"{i}", f"{i}", 0))
-            except:
+            except Exception as e:
+                print(f"Code couldn't execute with the following message: {e}")
                 continue
 
     def read_crawl_site_recursive(self, base, link, depth=0):
@@ -104,7 +97,7 @@ class WebScraper:
             site = requests.get(link).text
             if self.save_links:
                 with open(self.links_name, "a+") as f:
-                    f.write(f"{link},")
+                    f.write(f"{link}")
             soup = BeautifulSoup(site, "lxml")
             articles = []
             for i in self.element_types:
@@ -137,7 +130,8 @@ class WebScraper:
                     print(f"Getting URL {i}")
                     self.set.add(i.strip("/"))
                     self.read_crawl_site_recursive(f"{i}", f"{i}")
-        except:
+        except Exception as e:
+            print(f"Code couldn't execute with the following message: {e}")
             return
 
     def check_for_excluded_phrases(self, link):

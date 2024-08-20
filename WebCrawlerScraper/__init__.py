@@ -1,1 +1,3 @@
-from .WebScraper import WebScraper, PhrasesMode, Link
+from .WebScraper import WebScraper
+from .ScraperUtils import Link, PhrasesMode
+from .WebScraperAsync import WebScraperAsync
