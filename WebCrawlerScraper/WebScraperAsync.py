@@ -46,7 +46,7 @@ class WebScraperAsync:
         while not self.queue.empty() or not finish:
             if self.verbosity > 2:
                 print("Queue Loop")
-            cors.append(asyncio.ensure_future(self.get_link()))
+            cors.append(asyncio.ensure_future(self.start_request_from_link()))
             await asyncio.sleep(1)
             if self.queue.empty():
                 if self.verbosity > 2:
@@ -58,7 +58,7 @@ class WebScraperAsync:
             print("Queue finished")
         await asyncio.gather(*cors)
 
-    async def get_link(self):
+    async def start_request_from_link(self):
         link = await self.queue.get()
         try:
             response = requests.head(link.link)
@@ -86,7 +86,7 @@ class WebScraperAsync:
 
     async def get_information(self, html, link):
         info = await InfoItem.get_item(html=html)
-        info_data = [i for i in filter(lambda x: not self.check_results_for_phrases(x), info.info)]
+        info_data = [i for i in filter(lambda x: self.check_results_for_phrases(x), info.info)]
         await self.write_results_to_file(info_data, link)
 
     async def get_links(self, html, link):
@@ -126,12 +126,16 @@ class WebScraperAsync:
             await self.queue.put(Link(f"{i}", f"{i}", 0))
 
     def check_links_for_excluded_phrases(self, link):
+        if type(link) is type(None):
+            return True
         for i in self.excluded_links_phrases:
             if link.find(i) != -1:
                 return True
         return False
 
     def check_results_for_phrases(self, res):
+        if type(res) is type(None):
+            return False
         if self.phrases_mode == PhrasesMode.AND:
             result = True
             for i in self.searched_phrases:
